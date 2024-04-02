@@ -22,7 +22,7 @@ import { ref, unref, computed } from "vue";
 import { useMapStore } from "stores/map";
 
 import { Loading } from "quasar";
-
+import randomColor from "randomcolor";
 import {
   CityLandDataFeature,
   BaseDataFeature,
@@ -414,18 +414,26 @@ export const actionAddLayerWMS = ({ layer, workspace, map }) => {
   //   imageSize: [500, 500]
   // });
   // // Create a new Image layer
-  // const imageLayer = new Image({
-  //   id: `${layer.url}`,
-  //   source: wmsSource,
-  //   zIndex: 1,
+  // let imageLayer = new Image({
+  //   extent: [-13884991, 2870341, -7455066, 6338219],
+  //   source: new ImageWMS({
+  //     url: "https://ahocevar.com/geoserver/wms",
+  //     params: { LAYERS: "topp:states" },
+  //     ratio: 1,
+  //     serverType: "geoserver",
+  //   }),
   // });
+  // unref(map).addLayer(imageLayer);
+  // return imageLayer;
+
   const style = new Style({
     fill: new Fill({
       color: "#eeeeee",
     }),
   });
+
   let imageLayer;
-  if (layer.type === "VECTOR_IMAGE_LAYER")
+  if (layer.type === "VECTOR_IMAGE_LAYER" || true)
     imageLayer = new VectorImageLayer({
       // background: "#1a2b39",
       imageRatio: 2,
@@ -433,6 +441,15 @@ export const actionAddLayerWMS = ({ layer, workspace, map }) => {
         url: layer.url,
         format: new GeoJSON(),
       }),
+      style: function (feature) {
+        // console.log(feature.getKeys());
+        const color =
+          feature.get("COLOR") || (layer.name === "CAY_XANH"
+            ? "#00ff00"
+            : randomColor());
+        style.getFill().setColor(color);
+        return style;
+      },
     });
   else
     imageLayer = new VectorLayer({
@@ -442,6 +459,7 @@ export const actionAddLayerWMS = ({ layer, workspace, map }) => {
         format: new GeoJSON(),
       }),
       style: function (feature) {
+        // console.log(typeof feature);
         const color = feature.get("COLOR") || "#eeeeee";
         style.getFill().setColor(color);
         return style;

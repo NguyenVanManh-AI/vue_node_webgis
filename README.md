@@ -15,6 +15,8 @@
     + confirm pw : nguyenvanmanh2001it1
 8. Go to Database : gkwebgis to Edit Role account from USER to ADMIN 
 9. Go to file : C:\Program Files\GeoServer\webapps\geoserver\WEB-INF\web.xml => Edit same file vue_node_webgis/web.xml (copy file này dán vào file WEB-INF\web.xml)
+    + Search dưới task bar : Stop GeoServer => click 
+    + Search dưới task bar : Start GeoServer => click 
 10. Go : http://localhost:9000/projection-management => Thêm trục chiếu : 'EPSG:4326'
 11. Go : http://localhost:9000/location-management => Thêm điểm , Ex 
     + Tên : 120 Nguyen Luong Bang 
