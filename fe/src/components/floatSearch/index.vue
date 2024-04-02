@@ -112,14 +112,13 @@ export default defineComponent({
             definition: projectionDef,
             coordinates: [longitude, latitude],
           });
-          console.log(projections.value);
 
           const newExtent = transformExtent(JSON.parse(extent), 'EPSG:4326', projectionName)
           const newView = new View({
             projection: projectionName,
             center,
             // extent: JSON.parse(extent),
-            zoom:15,
+            zoom:10,
             maxZoom,
           });
           mapRemoveLayer(newView);

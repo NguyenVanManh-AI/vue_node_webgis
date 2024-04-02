@@ -97,6 +97,7 @@
               <popupLayer
                 v-model:row="propsLayer.row"
                 :layer-rows="propsLocation?.mapLayers"
+                :location="propsLocation"
               />
             </q-btn>
             <q-btn
@@ -163,7 +164,6 @@ export default defineComponent({
     propsLocation: Object,
   },
   setup(props) {
-    console.log("propsLocation", props.propsLocation.mapLayers);
     const vm = getCurrentInstance().proxy;
     const $q = useQuasar();
     const $t = i18n.global.t;

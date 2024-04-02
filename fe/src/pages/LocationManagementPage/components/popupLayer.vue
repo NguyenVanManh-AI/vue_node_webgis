@@ -55,6 +55,8 @@ export default defineComponent({
     const $q = useQuasar();
     const $t = i18n.global.t;
     const computedRow = ref(props.row);
+    const locationId = ref(unref(props.location?.id));
+
     const title = computed(() => {
       return props.row.id
         ? `${$t("Update layer")}: ${unref(computedRow).name}`
@@ -64,10 +66,11 @@ export default defineComponent({
       computedRow.value.type = LAYER_TYPE[1];
     }
     const saveEdit = async (value, _props) => {
+      console.log("value", locationId);
       const updateParams = {
         id: value.id,
         name: _props.name,
-        locationId: props?.location.id,
+        locationId: unref(props?.location?.id),
         description: _props.description,
         url: _props.url,
       };
@@ -88,13 +91,11 @@ export default defineComponent({
         const response = await createLayer(updateParams);
       }
     };
-    const updateModel = (val) => {};
 
     return {
       title,
       computedRow,
       saveEdit,
-      updateModel,
       types: LAYER_TYPE,
     };
   },

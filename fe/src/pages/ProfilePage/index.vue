@@ -2,7 +2,7 @@
   <div class="content" style="padding: 20px">
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-8">
+        <div class="" style="width:100%">
           <edit-profile-form />
         </div>
       </div>

@@ -286,6 +286,7 @@ export default defineComponent({
       }
       watch(
         () => layerCheckbox.value,
+
         (newVal, oldVal) => {
           if (newVal.length > oldVal.length) {
             const diff = _difference(newVal, oldVal);

@@ -173,7 +173,6 @@ export default defineComponent({
           try {
             const {layer, feature} = mapStore.getSelectedFeature
             const layerName = layer?.get?.("id")?.replace?.(`${unref(workspace)}:`, "")
-            
             const resolve = () => {
               layer?.getSource().updateParams()
             }

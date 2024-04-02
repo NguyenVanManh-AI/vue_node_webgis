@@ -1,7 +1,7 @@
 import { Map, Feature } from "ol";
 import _isFunction from "lodash/isFunction";
 import _isArray from "lodash/isArray";
-import { Fill, Stroke, Text, Style, Circle as CircleStyle } from "ol/style";
+import { Fill, Stroke, Text, Style, Circle as CircleStyle, Icon } from "ol/style";
 import { ScaleLine } from "ol/control";
 import { ImageWMS, TileWMS, Cluster } from "ol/source";
 import VectorSource from "ol/source/Vector";
@@ -433,23 +433,13 @@ export const actionAddLayerWMS = ({ layer, workspace, map }) => {
   });
 
   let imageLayer;
-  if (layer.type === "VECTOR_IMAGE_LAYER" || true)
+  if (layer.type === "VECTOR_IMAGE_LAYER")
     imageLayer = new VectorImageLayer({
-      // background: "#1a2b39",
       imageRatio: 2,
       source: new VectorSource({
         url: layer.url,
         format: new GeoJSON(),
       }),
-      style: function (feature) {
-        // console.log(feature.getKeys());
-        const color =
-          feature.get("COLOR") || (layer.name === "CAY_XANH"
-            ? "#00ff00"
-            : randomColor());
-        style.getFill().setColor(color);
-        return style;
-      },
     });
   else
     imageLayer = new VectorLayer({
@@ -458,12 +448,13 @@ export const actionAddLayerWMS = ({ layer, workspace, map }) => {
         url: layer.url,
         format: new GeoJSON(),
       }),
-      style: function (feature) {
-        // console.log(typeof feature);
-        const color = feature.get("COLOR") || "#eeeeee";
-        style.getFill().setColor(color);
-        return style;
-      },
+      style: new Style({
+        image: new Icon({
+          src:'https://cdn-icons-png.flaticon.com/512/11064/11064505.png',
+          size: [512,512],
+          scale:0.05
+        })
+      })
     });
   unref(map).addLayer(imageLayer);
   return imageLayer;

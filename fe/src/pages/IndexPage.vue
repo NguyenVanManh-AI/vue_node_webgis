@@ -20,9 +20,7 @@
     <FloatDetail
       v-if="showDetail"
       data-html2canvas-ignore
-      v-model="showDetail"
-      v-bind="floatDetailProps"
-      @update:model-content="floatDetailProps.content = $event"
+      :selected="showDetail"
     />
   </div>
   <div ref="popupRef" class="ol-popup">
@@ -76,6 +74,8 @@ import {
   getCurrentInstance,
   provide,
 } from "vue";
+import { ImageWMS } from "ol/source";
+
 import _debounce from "lodash/debounce";
 import _isEmpty from "lodash/isEmpty";
 import { useQuasar } from "quasar";
@@ -105,15 +105,7 @@ export default defineComponent({
     const $t = i18n.global.t;
     const locationStore = useLocationStore();
     const mapStore = useMapStore();
-    const showDetail = ref(false);
-    const floatDetailProps = ref({
-      title: null,
-      image: "images/No-image-available.png",
-      content: {},
-      type: LAYER_TYPE[0],
-      id: null,
-      coordinate: null,
-    });
+
     const imageHTML = ref(null);
     const layerForImage = ref(
       new VectorLayer({
@@ -128,57 +120,13 @@ export default defineComponent({
       })
     );
     unref(layerForImage).set("id", "selected-layer");
-    const onShowDetail = (option) => {
-      const {
-        content,
-        image,
-        title,
-        type = LAYER_TYPE[0],
-        coordinate,
-        feature_type = FEATURE_TYPE[0],
-      } = option;
-      showDetail.value = true;
-      if (title) {
-        floatDetailProps.value.title = title;
-      }
-      if (image) {
-        floatDetailProps.value.image = image;
-      }
-      if (content) {
-        floatDetailProps.value.content =
-          typeof content === "string" ? JSON.parse(content) : content;
-        if (
-          floatDetailProps.value?.content?.RefName ||
-          floatDetailProps.value?.content?.tendat ||
-          floatDetailProps.value?.content?.name
-        ) {
-          const _title =
-            floatDetailProps.value?.content?.RefName ||
-            floatDetailProps.value?.content?.tendat ||
-            floatDetailProps.value?.content?.name;
-          try {
-            floatDetailProps.value.title = decodeURIComponent(escape(_title));
-          } catch {
-            floatDetailProps.value.title = _title;
-          }
-        }
-      }
-      if (coordinate) {
-        floatDetailProps.value.coordinate = coordinate;
-      }
-      if (type !== LAYER_TYPE[0]) {
-        floatDetailProps.value.type = type;
-      }
-      if (feature_type !== FEATURE_TYPE[0]) {
-        floatDetailProps.value.feature_type = feature_type;
-      }
-    };
-    $bus.on("on-show-detail", onShowDetail);
+
     // popup
     const popupRef = ref(null);
     const popupContent = ref(null);
     const popupCloser = ref(null);
     const popupEvent = ref(null);
+    const showDetail = ref("");
     const pointermoveEvent = ref(null);
     const selectedObject = ref({});
     const overlay = ref(null);
@@ -212,23 +160,7 @@ export default defineComponent({
     const actionClosePopup = () => {
       // when close popup, clear the vectorforImage
       unref(layerForImage).getSource().clear();
-      showDetail.value = false;
-      floatDetailProps.value = {
-        title: null,
-        image: "images/No-image-available.png",
-        content: {},
-        type: LAYER_TYPE[0],
-        feature_type: FEATURE_TYPE[0],
-        id: null,
-        coordinate: null,
-      };
-      const lastFeature = unref(selectedObject).lastFeature;
-      const lastLayer = unref(selectedObject).lastLayer;
-      if (lastFeature) lastFeature.originStyle = false;
-      if (lastLayer) lastLayer?.changed?.();
-      unref(selectedObject).lastFeature = null;
-      unref(layerForImage).getSource().clear();
-      unref(overlay).setPosition(undefined);
+      showDetail.value = "";
     };
     $bus.on("close-float-detail", actionClosePopup);
     const onRemoveLayer = (layerUrl) => {
@@ -242,28 +174,7 @@ export default defineComponent({
       delete properties.geometry;
       floatDetailProps.value.id = feature.getId();
       floatDetailProps.value.title = feature.getId();
-      onShowDetail({
-        content: properties || {},
-      });
-      // getFeature({ name: featureId })
-      //   .then((response) => {
-      //     if (FEATURE_TYPE[1] === response.type) {
-      //       floatDetailProps.value.feature_type = response.type;
-      //     }
-      //     floatDetailProps.value.id = response.id;
-      //     onShowDetail({
-      //       content: JSON.parse(response?.properties || false),
-      //     });
-      //   })
-      //   .catch((e) => console.log(e));
     }, 200);
-
-    // const getFeatureUpload = (feature) => {
-    //   const objData = writeGeoJSON({ feature, map: unref(map) });
-    //   onShowDetail({
-    //     content: objData,
-    //   });
-    // };
 
     const styleChangeListener = function (feature) {
       feature.on("change", function (event) {
@@ -300,10 +211,10 @@ export default defineComponent({
       //     "EPSG:3857",
       //     unref(map).getView().getProjection()
       //   );
-      //   floatDetailProps.value.distance = distanceBetweenPoints(
-      //     location,
-      //     evt.coordinate
-      //   );
+      //   // floatDetailProps.value.distance = distanceBetweenPoints(
+      //   //   location,
+      //   //   evt.coordinate
+      //   // );
       //   unref(map).forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
       //     if (!layer || layer instanceof VectorLayer) return feature;
       //     if (layer.get("id-upload")) {
@@ -370,9 +281,10 @@ export default defineComponent({
       //     .getArray()
       //     .forEach((layer) => {
       //       if (layer instanceof ImageLayer) {
-      //         console.log(layer,layer.getSource());
+      //         console.log(layer, layer.getSource());
       //         const url = layer
-      //           .getSource().getFeatureInfoUrl(
+      //           .getSource()
+      //           .getFeatureInfoUrl(
       //             evt.coordinate,
       //             unref(map).getView().getResolution(),
       //             "EPSG:5899",
@@ -451,8 +363,45 @@ export default defineComponent({
         ],
         view: unref(view),
       });
+
       initPopupEvent();
-      // unref(map).addLayer(unref(vectorLayer));
+      // const layer = new ImageLayer({
+      //   // extent: [-13884991, 2870341, -7455066, 6338219],
+      //   source: new ImageWMS({
+      //     url: "https://ahocevar.com/geoserver/wms",
+      //     params: { LAYERS: "topp:states" },
+      //     ratio: 1,
+      //     serverType: "geoserver",
+      //   }),
+      // });
+      // unref(map).addLayer(unref(layer));
+
+      let selected = null;
+      unref(map).on("click", function (e) {
+        if (selected !== null) {
+          selected.setStyle(undefined);
+          selected = null;
+        }
+
+        unref(map).forEachFeatureAtPixel(e.pixel, function (f) {
+          selected = f;
+          // selectStyle.getFill().setColor(f.get("COLOR") || "#eeeeee");
+          // f.setStyle(selectStyle);
+          return true;
+        });
+
+        if (selected) {
+          // console.log(selected.getKeys());
+          const object = {};
+          selected.getKeys().forEach((key) => {
+            object[key] = selected.get(key);
+          });
+          showDetail.value = object;
+          // showDetail.value = selected.get('ECO_NAME');
+        } else {
+          // status.innerHTML = "&nbsp;";
+        }
+      });
     });
     onUnmounted(() => {
       $bus.off("close-popup");
@@ -460,14 +409,22 @@ export default defineComponent({
       $bus.off("on-show-detail");
     });
     const stickCenterX = ref((window.outerWidth / 10) * 2.2);
+    const selectStyle = new Style({
+      fill: new Fill({
+        color: "#eeeeee",
+      }),
+      stroke: new Stroke({
+        color: "rgba(255, 255, 255, 0.7)",
+        width: 2,
+      }),
+    });
 
     return {
       map,
       view,
-      showDetail,
-      floatDetailProps,
       imageHTML,
       popupRef,
+      showDetail,
       popupCloser,
       popupEvent,
       actionClosePopup,
