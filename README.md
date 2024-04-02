@@ -9,3 +9,8 @@
 4. Run be : npx prisma migrate dev --name init
 5. Run be : npm start 
 6. Run fe : npm run dev 
+7. Go to : http://localhost:9000/login to Register account 
+    + email : nguyenvanmanh2001it1@gmail.com 
+    + pw : nguyenvanmanh2001it1
+    + confirm pw : nguyenvanmanh2001it1
+8. Go to Database : gkwebgis to Edit Role account from USER to ADMIN 
